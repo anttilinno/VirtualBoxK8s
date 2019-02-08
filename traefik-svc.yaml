@@ -10,7 +10,9 @@ spec:
     - protocol: TCP
       port: 80
       name: web
+      hostPort: 80
     - protocol: TCP
       port: 8080
       name: admin
+      hostPort: 10000
   type: NodePort
