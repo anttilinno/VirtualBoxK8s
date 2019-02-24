@@ -54,31 +54,37 @@
 
 ### Route traffic from enp0s3 to enp0s8
 
-    root@debian:~# iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 32192 -j DNAT --to 10.0.2.4:32192
-    root@debian:~# iptables -A FORWARD -i enp0s8 -p tcp --dport 32192 -d 10.0.2.4 -j ACCEPT
+    root@debian:~# ip addr show dev enp0s3
+    2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+        link/ether 08:00:27:ea:49:f5 brd ff:ff:ff:ff:ff:ff
+        inet 10.0.2.10/24 brd 10.0.2.255 scope global enp0s3
+
+    root@debian:~# iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 10000 -j DNAT --to 10.0.2.10:10000
+    root@debian:~# iptables -A FORWARD -i enp0s8 -p tcp --dport 10000 -d 10.0.2.10 -j ACCEPT
 
 Use this [tutorial](https://supergiant.io/blog/using-traefik-as-ingress-controller-for-your-kubernetes-cluster/) as base.
 
-If tutorial uses **minikube ip** then instead of
-`$(minikube ip)` use `$(ip route get 1 | awk '{print $NF;exit}')`
+If tutorial uses **minikube ip** then instead of `$(minikube ip)` use enp0s3 address
 
 ### And Kubernetes service with ingress
 
 ##### Let’s first create a new ServiceAccount to provide Traefik with the identity in your cluster. 
 
     kubectl create  -f  traefik-service-acc.yaml
+    
 ##### Next, let’s create a ClusterRole with a set of permissions which will be applied to the Traefik ServiceAccount.
 
     kubectl create  -f  traefik-cr.yaml
+    
 #####  Finally, to enable these permissions, we should bind the ClusterRole to the Traefik ServiceAccount.
 
     kubectl create  -f  traefik-crb.yaml
-##### Next, we will deploy Traefik to your Kubernetes cluster. We’ll be using the Deployment manifest to deploy Traefik to your Kubernetes cluster.
+    
+##### Next, we will deploy Traefik to your Kubernetes cluster. We’ll be using the Deployment manifest to deploy Traefik to your Kubernetes cluster. And check if pods are successfully created.
 
     kubectl create  -f  traefik-deployment.yaml
-##### Now, let’s check to see if the Traefik Pods were successfully created:
-
     kubectl  --namespace=kube-system get pods
+    
 ##### Let’s create a Service to access Traefik Ingress Pods. To this end, we need a Service that exposes two NodePorts.
 
     kubectl create  -f  traefik-svc.yaml
@@ -88,19 +94,22 @@ If tutorial uses **minikube ip** then instead of
 
     kubectl create  -f  traefik-webui-svc.yaml
     kubectl describe svc traefik-web-ui  --namespace=kube-system
+    
 ##### Next, we need to create an Ingress resource pointing to the Traefik Web UI backend.
 
     kubectl create  -f  traefik-ingress.yaml
 
-To make the Traefik Web UI accessible in the browser via the traefik-ui.vbox , we need to add a new entry to our /etc/hosts file. *(Or we don't need.)*
-You should now be able to visit http://enp0s8/:NodePort in the browser and view the Traefik web UI.
+To make the Traefik Web UI accessible in the browser via the traefik-ui.vbox, we need to add a new entry to our /etc/hosts file.
+You should now be able to visit http://traefik-ui.vbox:10000 in the browser and view the Traefik web UI.
 
 ##### Let’s demonstrate how Traefik Ingress Controller can be used to set up name-based routing for a list of frontends.
 
     kubectl create  -f  animals-deployment.yaml
+    
 ##### Create a Service for each Deployment to make the Pods accessible:
 
     kubectl create  -f  animals-svc.yaml
+    
 ##### Finally, let’s create an Ingress with three frontend-backend pairs for each Deployment. bear.vbox ,moose.vbox , and hare.vbox will be our frontends pointing to corresponding backend Services.
 
     kubectl create  -f  animals-ingress.yaml
