@@ -30,6 +30,9 @@
         netmask 255.255.255.0
         gateway 192.168.0.1
 
+#### Steps of importance
+    **traefik-ui.vbox** NEEDS to be added to /etc/hosts, as UI uses hostname.
+
 #### Initialize kubernetes cluster with flannel prerequisite
 
     sudo kubeadm init --pod-network-cidr=10.244.0.0/16
