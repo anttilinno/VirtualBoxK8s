@@ -61,6 +61,8 @@
 
     root@debian:~# iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 10000 -j DNAT --to 10.0.2.10:10000
     root@debian:~# iptables -A FORWARD -i enp0s8 -p tcp --dport 10000 -d 10.0.2.10 -j ACCEPT
+    root@debian:~# iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 80 -j DNAT --to 10.0.2.10:80
+    root@debian:~# iptables -A FORWARD -i enp0s8 -p tcp --dport 80 -d 10.0.2.10 -j ACCEPT
 
 Use this [tutorial](https://supergiant.io/blog/using-traefik-as-ingress-controller-for-your-kubernetes-cluster/) as base.
 
